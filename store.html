@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Store | Angkor Client</title>
+    <link rel="icon" type="image/png" href="asset/image/logo.png">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="main-nav">
+        <div class="container nav-flex">
+            <a href="index.html" class="logo">ANGKOR<span>CLIENT</span></a>
+            <div class="nav-links"><a href="index.html">Home</a></div>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <div class="container">
+            <div class="user-card">
+                <img src="https://mc-heads.net/avatar/steve" id="avatar">
+                <input type="text" id="username" placeholder="Username..." oninput="updateSkin()">
+            </div>
+            <div class="rank-grid">
+                <div class="shop-card" id="card-VIP" onclick="selectRank('VIP', 5)">
+                    <h2>VIP</h2>
+                    <div class="price">$5.00</div>
+                    <select id="server-VIP" class="server-select"><option>Survival</option></select>
+                </div>
+                <div class="shop-card active" id="card-MVP" onclick="selectRank('MVP', 15)">
+                    <h2>MVP</h2>
+                    <div class="price">$15.00</div>
+                    <select id="server-MVP" class="server-select"><option>Survival</option></select>
+                </div>
+            </div>
+            <button class="btn-primary" style="margin-top:50px; width:300px;" onclick="goToPayment()">Continue to Payment</button>
+        </div>
+    </div>
+
+    <script>
+        let selectedRank = 'MVP';
+        function updateSkin() {
+            const name = document.getElementById('username').value;
+            document.getElementById('avatar').src = name.length > 2 ? `https://mc-heads.net/avatar/${name}` : `https://mc-heads.net/avatar/steve`;
+        }
+        function selectRank(rank) {
+            document.querySelectorAll('.shop-card').forEach(c => c.classList.remove('active'));
+            document.getElementById('card-'+rank).classList.add('active');
+            selectedRank = rank;
+        }
+        function goToPayment() {
+            const user = document.getElementById('username').value;
+            if(!user) return alert("Enter Username!");
+            if(selectedRank === 'VIP') window.location.href = `payment1.html?user=${user}`;
+            else window.location.href = `payment2.html?user=${user}`;
+        }
+    </script>
+</body>
+</html>

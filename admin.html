@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard | Angkor Client</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+    <style>
+        .admin-container { padding: 120px 0; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 40px; }
+        .stat-card { background: white; padding: 30px; border-radius: 20px; box-shadow: var(--shadow); border: 1px solid var(--border); text-align: center; }
+        .stat-card h3 { font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase; margin-bottom: 10px; }
+        .stat-card p { font-size: 2rem; font-weight: 800; color: var(--gold); margin: 0; }
+
+        .report-table { width: 100%; border-collapse: collapse; background: white; border-radius: 20px; overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--border); }
+        .report-table th { background: #f8f9fa; padding: 20px; text-align: left; border-bottom: 2px solid var(--border); font-size: 0.85rem; }
+        .report-table td { padding: 20px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        
+        @media print {
+            .main-nav, .no-print { display: none !important; }
+            .admin-container { padding: 0; }
+            .stat-card, .report-table { box-shadow: none; border: 1px solid #000; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="main-nav no-print">
+        <div class="container nav-flex">
+            <a href="index.html" class="logo">ANGKOR<span>ADMIN</span></a>
+            <button class="btn-primary" onclick="window.print()">Print Report</button>
+        </div>
+    </nav>
+
+    <div class="container admin-container">
+        <header style="margin-bottom: 40px;">
+            <h1>Sales <span class="gold-text">Report</span></h1>
+            <p>Track all incoming payments and player upgrades.</p>
+        </header>
+
+        <div class="stats-grid no-print">
+            <div class="stat-card"><h3>Total Revenue</h3><p id="total-money">$0.00</p></div>
+            <div class="stat-card"><h3>Total Orders</h3><p id="total-orders">0</p></div>
+            <div class="stat-card"><h3>Active Ranks</h3><p>Online</p></div>
+        </div>
+
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th>Date & Time</th>
+                    <th>Player Name</th>
+                    <th>Rank Purchased</th>
+                    <th>Amount Paid</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="admin-list">
+                </tbody>
+        </table>
+
+        <div class="no-print" style="margin-top: 30px; text-align: right;">
+            <button onclick="clearAllData()" style="color: red; background: none; border: none; cursor: pointer;">Clear Database</button>
+        </div>
+    </div>
+
+    <script>
+        function renderAdminData() {
+            const data = JSON.parse(localStorage.getItem('angkor_sales')) || [];
+            const list = document.getElementById('admin-list');
+            let total = 0;
+
+            if(data.length === 0) {
+                list.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:50px;">No sales recorded yet.</td></tr>';
+                return;
+            }
+
+            list.innerHTML = data.map(item => {
+                total += parseFloat(item.price);
+                return `
+                    <tr>
+                        <td style="color:#666;">${item.date}</td>
+                        <td><b>${item.user}</b></td>
+                        <td><span class="badge" style="margin:0;">${item.rank}</span></td>
+                        <td><b>$${item.price}</b></td>
+                        <td><b style="color:#2ecc71;">COMPLETED</b></td>
+                    </tr>
+                `;
+            }).reverse().join('');
+
+            document.getElementById('total-money').innerText = '$' + total.toFixed(2);
+            document.getElementById('total-orders').innerText = data.length;
+        }
+
+        function clearAllData() {
+            if(confirm("Delete all purchase history? This cannot be undone.")) {
+                localStorage.removeItem('angkor_sales');
+                renderAdminData();
+            }
+        }
+
+        window.onload = renderAdminData;
+    </script>
+</body>
+</html>

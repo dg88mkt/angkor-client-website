@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Order Receipt | Angkor Client</title>
+    <link rel="icon" type="image/png" href="asset/image/logo.png">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        .receipt-container { padding: 40px 0; display: flex; flex-direction: column; align-items: center; background: #f1f5f9; min-height: 100vh; }
+        .receipt-card { 
+            background: white; padding: 40px; border-radius: 12px; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1); border-top: 10px solid #B8860B;
+            max-width: 500px; width: 100%;
+        }
+        .r-header { text-align: center; border-bottom: 2px dashed #eee; padding-bottom: 20px; margin-bottom: 20px; }
+        .status-badge { display: inline-block; padding: 5px 15px; border-radius: 50px; font-size: 0.75rem; font-weight: 800; margin-top: 10px; }
+        .r-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.95rem; }
+        .r-items { background: #f8fafc; padding: 15px; border-radius: 12px; margin: 20px 0; border: 1px solid #e2e8f0; text-align: left; }
+        .receipt-img-box { border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; margin-top: 15px; }
+        .receipt-img { width: 100%; border-radius: 8px; }
+        .no-print { margin-top: 20px; text-align: center; }
+        .btn-primary { background: #B8860B; color: white; padding: 10px 20px; border-radius: 5px; border: none; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="receipt-container">
+        <div class="receipt-card" id="capture-area">
+            <div class="r-header">
+                <h2 style="margin:0; font-size: 1.5rem;">ORDER CONFIRMATION</h2>
+                <p style="color:#64748b; font-size:0.85rem; margin: 5px 0;">Transaction ID: <span id="r-id"></span></p>
+                <div id="status-badge" class="status-badge" style="background:#fffbeb; color:#b45309;">⌛ CAPTURING FRAME...</div>
+            </div>
+
+            <div class="r-row"><span>Customer Username</span> <b id="r-user"></b></div>
+            <div class="r-row"><span>Purchase Date</span> <b id="r-date"></b></div>
+            
+            <div class="r-items">
+                <p style="margin:0 0 10px 0; color:#B8860B; font-weight:800;">Package Includes:</p>
+                <ul style="margin:0; padding-left:18px; font-size:0.85rem; color:#475569; line-height:1.6;">
+                    <li><span id="r-rank"></span> Rank Lifetime Access</li>
+                    <li>Exclusive Angkor Gold Cape</li>
+                    <li>Priority Join & Custom Prefix</li>
+                </ul>
+            </div>
+
+            <div class="r-row" style="font-size:1.4rem; border-top:1px solid #eee; padding-top:15px; margin-top:15px;">
+                <span>Total Paid</span> <b style="color:#B8860B;" id="r-price"></b>
+            </div>
+
+            <p style="font-size:0.8rem; color:#64748b; margin: 20px 0 5px;">Submitted Proof of Payment:</p>
+            <div class="receipt-img-box">
+                <img id="r-img" src="" class="receipt-img" crossorigin="anonymous">
+            </div>
+
+            <div style="text-align:center; margin-top:20px;">
+                <p style="font-size:0.8rem; color:#94a3b8; line-height:1.4;">Thank you for your purchase!<br>Staff will activate your rank shortly.</p>
+            </div>
+        </div>
+
+        <div class="no-print">
+            <button class="btn-primary" onclick="window.print()">Print PDF</button>
+            <br><br>
+            <a href="index.html" style="color:#B8860B; font-weight:bold; text-decoration:none;">← Back to Store</a>
+        </div>
+    </div>
+
+    <script>
+        const BOT_TOKEN = '8500713893:AAFy-FicqFJgcjlVB-LVE9H9fuAZ9fIqpCQ';
+        const CHAT_ID = '-1003725861616';
+
+        window.onload = async function() {
+            const data = JSON.parse(localStorage.getItem('last_order'));
+            if(!data) {
+                window.location.href = "store.html";
+                return;
+            }
+
+            const tid = "#ANK-" + Math.floor(100000 + Math.random() * 900000);
+            
+            // Fill UI
+            document.getElementById('r-user').innerText = data.user;
+            document.getElementById('r-date').innerText = data.date;
+            document.getElementById('r-rank').innerText = data.rank;
+            document.getElementById('r-price').innerText = "$" + data.price;
+            document.getElementById('r-img').src = data.img;
+            document.getElementById('r-id').innerText = tid;
+
+            // Wait a moment for the image to load before capturing
+            setTimeout(() => {
+                captureAndSend(data, tid);
+            }, 1000);
+        }
+
+        async function captureAndSend(order, tid) {
+            const badge = document.getElementById('status-badge');
+            const element = document.getElementById('capture-area');
+
+            try {
+                // Take a screenshot of the receipt-card
+                const canvas = await html2canvas(element, {
+                    useCORS: true,
+                    scale: 2 // Higher quality
+                });
+
+                // Convert canvas to blob
+                canvas.toBlob(async (blob) => {
+                    const formData = new FormData();
+                    formData.append('chat_id', CHAT_ID);
+                    formData.append('photo', blob, 'order_receipt.png');
+                    formData.append('caption', `✅ *New Order Recieved*\nUser: ${order.user}\nID: ${tid}`);
+                    formData.append('parse_mode', 'Markdown');
+
+                    const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if(res.ok) {
+                        badge.style.background = "#e8f5e9";
+                        badge.style.color = "#2ecc71";
+                        badge.innerText = "✓ SENT TO TELEGRAM";
+                    } else {
+                        throw new Error("Telegram API Error");
+                    }
+                }, 'image/png');
+
+            } catch (err) {
+                badge.style.background = "#fee2e2";
+                badge.style.color = "#ef4444";
+                badge.innerText = "✕ TELEGRAM ERROR";
+                console.error(err);
+            }
+        }
+    </script>
+</body>
+</html>

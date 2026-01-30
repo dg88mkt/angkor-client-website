@@ -50,9 +50,10 @@
         function goToPayment() {
             const user = document.getElementById('username').value;
             if(!user) return alert("Enter Username!");
-            if(selectedRank === 'VIP') window.location.href = `payment1.html?user=${user}`;
-            else window.location.href = `payment2.html?user=${user}`;
+            if(selectedRank === 'VIP') window.location.href = `vip.html?user=${user}`;
+            else window.location.href = `mvp.html?user=${user}`;
         }
     </script>
 </body>
+
 </html>
